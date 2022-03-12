@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+    <style>
+        #chart_div {
+            width: 1200px;
+        }
+        
+        body {
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Azure SignalR Sample 02</h1>
+    <br/>
+    <div id="chart_div"></div>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <script>
+
+        google.charts.load("current", {
+            packages: ["corechart", "line"]
+        });
+
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+
+            let data = google.visualization.arrayToDataTable([
+                ["Second", "Temperature"],
+                [0, 0]
+            ]);
+
+            let options = {
+                title: "Device Temperature",
+                hAxis: {
+                    title: "Time"
+                },
+                vAxis: {
+                    title: "Temperature"
+                }
+            };
+
+            let chart = new google.visualization.LineChart(
+                document.getElementById("chart_div")
+            );
+            chart.draw(data, options);
+
+            let index = 0;
+
+            const apiBaseUrl = window.location.origin;
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl(apiBaseUrl + '/api')
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+            connection.on('iotClient', (message) => {
+                data.addRow([index, parseInt(message)]);
+                chart.draw(data, options);
+                index++;
+            });
+
+            connection.start()
+                .catch(console.error);
+        }
+    </script>
+</body>
+</html>
